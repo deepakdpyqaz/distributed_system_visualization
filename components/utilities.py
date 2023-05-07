@@ -26,5 +26,5 @@ def convert_to_local(utc_dt):
     utc_datetime = datetime.strptime(utc_dt, "%Y-%m-%d %H:%M:%S.%f")
     utc_datetime = utc_timezone.localize(utc_datetime)
     indian_datetime = utc_datetime.astimezone(indian_timezone)
-    indian_string = indian_datetime.strftime("%y-%m-%d %H:%M:%S")
+    indian_string = indian_datetime.strftime("%d/%m/%y %H:%M:%S")
     return indian_string

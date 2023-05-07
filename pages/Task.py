@@ -6,6 +6,7 @@ import pytz
 import time
 import pandas as pd
 
+st.set_page_config(page_title="Tasks", page_icon="🧊")
 is_authenticated()
 
 
@@ -23,7 +24,7 @@ def get_utilization_report(task):
     clients = db.child("tasks").child(task).child("client").shallow().get().val()
     clients = list(clients)
     utilization = [db.child("heartbeat").child(client).get().val() for client in clients]
-    return pd.DataFrame(utilization)
+    return pd.DataFrame(utilization,index=clients)
 
 keys = [""]+list(tasks.keys())[::-1]
 task_selected = st.selectbox("Select a task", keys, format_func=create_labels)
@@ -41,23 +42,25 @@ if task_selected != "":
         col5.metric("End", convert_to_local(selected_task["end"]))
     else:
         col5.metric("End", "Not finished")
-    
-    st.divider()
-    st.subheader("Performance")
-    performance_wrapper = st.empty()
-    while True:
-        with performance_wrapper.container():
-                utilization = get_utilization_report(task_selected)
-                col1,col2 = st.columns(2)
-                with col1:
-                    st.metric("CPU cores", utilization["cpu_cores"].sum())
-                    st.metric("Memory (GB)", utilization["memory"].sum())
-                    st.metric("Disk (GB)", utilization["disk"].sum())
-                    st.metric("GPU (GB)", utilization["gpu_memory"].sum())
-                with col2:
-                    st.metric("Core Utilization (%)", utilization["cpu_utilization"].mean())
-                    st.metric("Memory Utilization (%)", utilization["memory_utilization"].mean())
-                    st.metric("Disk Utilization (%)", utilization["disk_utilization"].mean())
-                    st.metric("GPU Utilization (%)", utilization["gpu_memory_used"].mean())
-                time.sleep(10)
-                st.info("Data refreshed at {}".format(datetime.datetime.now().strftime("%H:%M:%S")))
+    if not selected_task.get("end",None):
+        st.divider()
+        st.subheader("Performance")
+        performance_wrapper = st.empty()
+        while True:
+            with performance_wrapper.container():
+                    utilization = get_utilization_report(task_selected)
+                    col1,col2 = st.columns(2)
+                    with col1:
+                        st.metric("CPU cores", utilization["cpu_cores"].sum())
+                        st.metric("Memory (GB)", utilization["memory"].sum())
+                        st.metric("Disk (GB)", utilization["disk"].sum())
+                        st.metric("GPU (GB)", utilization["gpu_memory"].sum())
+                    with col2:
+                        st.metric("Core Utilization (%)", utilization["cpu_utilization"].mean())
+                        st.metric("Memory Utilization (%)", utilization["memory_utilization"].mean())
+                        st.metric("Disk Utilization (%)", utilization["disk_utilization"].mean())
+                        st.metric("GPU Utilization (%)", utilization["gpu_memory_used"].mean())
+                    utilization["timestamp"] = utilization["timestamp"].apply(convert_to_local)
+                    st.dataframe(utilization)
+                    time.sleep(5*60)
+                    st.info("Data refreshed at {}".format(datetime.datetime.now().strftime("%H:%M:%S")))
