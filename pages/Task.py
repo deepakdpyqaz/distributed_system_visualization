@@ -69,4 +69,4 @@ if task_selected != "":
                     utilization["timestamp"] = utilization["timestamp"].apply(convert_to_local)
                     st.dataframe(utilization)
                     time.sleep(10)
-                    st.info("Data refreshed at {}".format(datetime.datetime.now().strftime("%H:%M:%S")))
+                    st.info("Data refreshed at {}".format(datetime.datetime.utcnow().astimezone(pytz.timezone('Asia/Kolkata')).strftime("%H:%M:%S")))
