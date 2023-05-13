@@ -21,11 +21,13 @@ def create_labels(key):
         return f"{tasks[key]['name']} ({key})"
 
 def get_utilization_report(task):
-    clients = db.child("tasks").child(task).child("client").shallow().get().val()
-    clients = list(clients)
-    utilization = [db.child("heartbeat").child(client).get().val() for client in clients]
-    return pd.DataFrame(utilization,index=clients)
-
+    try:
+        clients = db.child("tasks").child(task).child("client").shallow().get().val()
+        clients = list(clients)
+        utilization = [db.child("heartbeat").child(client).get().val() for client in clients]
+        return pd.DataFrame(utilization,index=clients)
+    except:
+        return pd.DataFrame()
 keys = [""]+list(tasks.keys())[::-1]
 task_selected = st.selectbox("Select a task", keys, format_func=create_labels)
 st.divider()
@@ -49,6 +51,10 @@ if task_selected != "":
         while True:
             with performance_wrapper.container():
                     utilization = get_utilization_report(task_selected)
+                    if utilization.empty:
+                        st.warning("No client is running this task")
+                        time.sleep(10)
+                        continue
                     col1,col2 = st.columns(2)
                     with col1:
                         st.metric("CPU cores", utilization["cpu_cores"].sum())
