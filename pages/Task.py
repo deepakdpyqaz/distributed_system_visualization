@@ -14,6 +14,17 @@ is_authenticated()
 db = get_firebase_db()
 tasks = db.child("tasks").order_by_child("start").limit_to_last(5).get().val()
 
+zero_matrix = {
+    "cpu_cores":0,
+    "cpu_utilization":0,
+    "memory":0,
+    "memory_utilization":0,
+    "disk":0,
+    "disk_utilization":0,
+    "gpu_memory":0,
+    "gpu_memory_used":0,
+    "timestamp":datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
+}
 def create_labels(key):
     if key == "":
         return key
@@ -25,6 +36,7 @@ def get_utilization_report(task):
         clients = db.child("tasks").child(task).child("client").shallow().get().val()
         clients = list(clients)
         utilization = [db.child("heartbeat").child(client).get().val() for client in clients]
+        utilization = [zero_matrix if x is None else x for x in utilization]
         return pd.DataFrame(utilization,index=clients)
     except:
         return pd.DataFrame()
