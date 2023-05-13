@@ -77,7 +77,7 @@ if task_selected != "":
                         st.metric("Core Utilization (%)", round(utilization["cpu_utilization"].mean(),2))
                         st.metric("Memory Utilization (%)", round(utilization["memory_utilization"].mean(),2))
                         st.metric("Disk Utilization (%)", round(utilization["disk_utilization"].mean(),2))
-                        st.metric("GPU Utilization (%)", round(utilization["gpu_memory_used"].sum()/utilization["gpu_memory"]*100,2))
+                        st.metric("GPU Utilization (%)", round(utilization["gpu_memory_used"].sum()/utilization["gpu_memory"].sum()*100,2))
                     utilization["timestamp"] = utilization["timestamp"].apply(convert_to_local)
                     st.dataframe(utilization)
                     time.sleep(10)
