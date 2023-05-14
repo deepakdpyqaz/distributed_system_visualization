@@ -69,10 +69,10 @@ if task_selected != "":
                         continue
                     col1,col2 = st.columns(2)
                     with col1:
-                        st.metric("CPU cores", utilization["cpu_cores"].sum())
-                        st.metric("Memory (GB)", utilization["memory"].sum())
-                        st.metric("Disk (GB)", utilization["disk"].sum())
-                        st.metric("GPU (GB)", utilization["gpu_memory"].sum())
+                        st.metric("CPU cores", round(utilization["cpu_cores"].sum()))
+                        st.metric("Memory (GB)", round(utilization["memory"].sum()))
+                        st.metric("Disk (GB)", round(utilization["disk"].sum()))
+                        st.metric("GPU (GB)", round(utilization["gpu_memory"].sum()))
                     with col2:
                         st.metric("Core Utilization (%)", round(utilization["cpu_utilization"].mean(),2))
                         st.metric("Memory Utilization (%)", round(utilization["memory_utilization"].mean(),2))
