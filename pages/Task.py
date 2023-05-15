@@ -23,6 +23,7 @@ zero_matrix = {
     "disk_utilization":0,
     "gpu_memory":0,
     "gpu_memory_used":0,
+    "timer": 0,
     "timestamp":datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
 }
 def create_labels(key):
@@ -31,15 +32,29 @@ def create_labels(key):
     else:
         return f"{tasks[key]['name']} ({key})"
 
+def get_zone(row):
+    tnow = datetime.datetime.utcnow()
+    timestamp = datetime.datetime.strptime(row["timestamp"],"%Y-%m-%d %H:%M:%S.%f")
+    timer = row["timer"]
+    if (tnow-timestamp).total_seconds() > 3*timer:
+        return "red"
+    else:
+        return "green"
+
 def get_utilization_report(task):
     try:
         clients = db.child("tasks").child(task).child("client").shallow().get().val()
         clients = list(clients)
         utilization = [db.child("heartbeat").child(client).get().val() for client in clients]
         utilization = [zero_matrix if x is None else x for x in utilization]
-        return pd.DataFrame(utilization,index=clients)
+        utilization = pd.DataFrame(utilization,index=clients)
+        utilization["zone"] = utilization.apply(get_zone,axis=1)
     except:
         return pd.DataFrame()
+
+def get_red_zoned(s):
+    return ['background-color: red']*len(s) if s.zone=="red" else ['background-color: green']*len(s)
+
 keys = [""]+list(tasks.keys())[::-1]
 task_selected = st.selectbox("Select a task", keys, format_func=create_labels)
 st.divider()
@@ -62,7 +77,8 @@ if task_selected != "":
         performance_wrapper = st.empty()
         while True:
             with performance_wrapper.container():
-                    utilization = get_utilization_report(task_selected)
+                    full_utilization = get_utilization_report(task_selected)
+                    utilization = full_utilization[full_utilization["zone"]=="green"]
                     if utilization.empty:
                         st.warning("No client is running this task")
                         time.sleep(10)
@@ -79,6 +95,6 @@ if task_selected != "":
                         st.metric("Disk Utilization (%)", round(utilization["disk_utilization"].mean(),2))
                         st.metric("GPU Utilization (%)", round(utilization["gpu_memory_used"].sum()/utilization["gpu_memory"].sum()*100,2))
                     utilization["timestamp"] = utilization["timestamp"].apply(convert_to_local)
-                    st.dataframe(utilization)
+                    st.dataframe(full_utilization.style.apply(get_red_zoned,axis=1).hide_index())
                     time.sleep(10)
                     st.info("Data refreshed at {}".format(datetime.datetime.utcnow().astimezone(pytz.timezone('Asia/Kolkata')).strftime("%H:%M:%S")))
