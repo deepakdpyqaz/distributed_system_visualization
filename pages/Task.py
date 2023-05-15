@@ -95,7 +95,7 @@ if task_selected != "":
                         st.metric("Memory Utilization (%)", round(utilization["memory_utilization"].mean(),2))
                         st.metric("Disk Utilization (%)", round(utilization["disk_utilization"].mean(),2))
                         st.metric("GPU Utilization (%)", round(utilization["gpu_memory_used"].sum()/utilization["gpu_memory"].sum()*100,2))
-                    utilization["timestamp"] = utilization["timestamp"].apply(convert_to_local)
+                    full_utilization["timestamp"] = full_utilization["timestamp"].apply(convert_to_local)
                     st.dataframe(full_utilization.style.apply(get_red_zoned,axis=1))
                     time.sleep(10)
                     st.info("Data refreshed at {}".format(datetime.datetime.utcnow().astimezone(pytz.timezone('Asia/Kolkata')).strftime("%H:%M:%S")))
