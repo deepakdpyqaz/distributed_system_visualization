@@ -49,6 +49,7 @@ def get_utilization_report(task):
         utilization = [zero_matrix if x is None else x for x in utilization]
         utilization = pd.DataFrame(utilization,index=clients)
         utilization["zone"] = utilization.apply(get_zone,axis=1)
+        return utilization
     except:
         return pd.DataFrame()
 
